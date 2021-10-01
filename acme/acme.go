@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"reflect"
 	"strings"
 	"sync"
@@ -703,9 +704,10 @@ func (a *ACME) getDomainsCertificates(domains []string) (*Certificate, error) {
 	bundle := true
 
 	request := certificate.ObtainRequest{
-		Domains:    cleanDomains,
-		Bundle:     bundle,
-		MustStaple: OSCPMustStaple,
+		Domains:        cleanDomains,
+		Bundle:         bundle,
+		MustStaple:     OSCPMustStaple,
+		PreferredChain: os.Getenv("PREFERRED_CHAIN"),
 	}
 
 	cert, err := a.client.Certificate.Obtain(request)

@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	fmtlog "log"
 	"net/url"
+	"os"
 	"reflect"
 	"strings"
 	"sync"
@@ -410,13 +411,15 @@ func (p *Provider) resolveCertificate(domain types.Domain, domainFromConfigurati
 
 	var cert *certificate.Resource
 	bundle := true
+
 	if p.useCertificateWithRetry(uncheckedDomains) {
 		cert, err = obtainCertificateWithRetry(domains, client, p.DNSChallenge.preCheckTimeout, p.DNSChallenge.preCheckInterval, bundle)
 	} else {
 		request := certificate.ObtainRequest{
-			Domains:    domains,
-			Bundle:     bundle,
-			MustStaple: OSCPMustStaple,
+			Domains:        domains,
+			Bundle:         bundle,
+			MustStaple:     OSCPMustStaple,
+			PreferredChain: os.Getenv("PREFERRED_CHAIN"),
 		}
 		cert, err = client.Certificate.Obtain(request)
 	}
@@ -493,9 +496,10 @@ func obtainCertificateWithRetry(domains []string, client *lego.Client, timeout, 
 
 	operation := func() error {
 		request := certificate.ObtainRequest{
-			Domains:    domains,
-			Bundle:     bundle,
-			MustStaple: OSCPMustStaple,
+			Domains:        domains,
+			Bundle:         bundle,
+			MustStaple:     OSCPMustStaple,
+			PreferredChain: os.Getenv("PREFERRED_CHAIN"),
 		}
 		cert, err = client.Certificate.Obtain(request)
 		return err
